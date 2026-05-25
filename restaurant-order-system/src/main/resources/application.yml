@@ -1,0 +1,60 @@
+server:
+  port: 8080
+spring:
+  application:
+    name: restaurant-order-system
+  servlet:
+    multipart:
+      max-file-size: 2MB
+      max-request-size: 3MB
+  datasource:
+    url: ${MYSQL_URL:jdbc:mysql://localhost:3306/restaurant_order?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Kuala_Lumpur}
+    username: ${MYSQL_USERNAME:restaurant}
+    password: ${MYSQL_PASSWORD:restaurant}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      database: 0
+  rabbitmq:
+    host: ${RABBITMQ_HOST:localhost}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USERNAME:guest}
+    password: ${RABBITMQ_PASSWORD:guest}
+restaurant:
+  security:
+    jwt-secret: ${RESTAURANT_JWT_SECRET:change-this-secret-before-production}
+    token-hours: ${RESTAURANT_TOKEN_HOURS:12}
+    sms-debug-enabled: ${RESTAURANT_SMS_DEBUG_ENABLED:false}
+    allowed-origin-patterns: ${RESTAURANT_ALLOWED_ORIGIN_PATTERNS:http://127.0.0.1:*,http://localhost:*,http://192.168.*:*,http://10.*:*,http://172.16.*:*,http://172.17.*:*,http://172.18.*:*,http://172.19.*:*,http://172.20.*:*,http://172.21.*:*,http://172.22.*:*,http://172.23.*:*,http://172.24.*:*,http://172.25.*:*,http://172.26.*:*,http://172.27.*:*,http://172.28.*:*,http://172.29.*:*,http://172.30.*:*,http://172.31.*:*}
+  i18n:
+    default-lang: ms_my
+  printer:
+    socket-timeout-ms: 2500
+    max-retry: 3
+    dry-run: false
+  app:
+    latest-version: ${WAITER_APP_LATEST_VERSION:1.0.1}
+    latest-build: ${WAITER_APP_LATEST_BUILD:2}
+    download-url: ${WAITER_APP_DOWNLOAD_URL:https://example.com/waiter-app}
+    release-notes: ${WAITER_APP_RELEASE_NOTES:优化桌台状态同步、弱网重连和个人资料体验}
+    force-update: ${WAITER_APP_FORCE_UPDATE:false}
+  mq:
+    enabled: ${RESTAURANT_MQ_ENABLED:false}
+    print-exchange: restaurant.print.exchange
+    print-queue: restaurant.print.queue
+    print-routing-key: print.task
+    print-dead-letter-exchange: restaurant.print.dlx
+    print-dead-letter-queue: restaurant.print.dlq
+    print-dead-letter-routing-key: print.task.dead
+  archive:
+    enabled: ${RESTAURANT_ARCHIVE_ENABLED:true}
+    order-retention-days: ${RESTAURANT_ORDER_RETENTION_DAYS:365}
+    log-retention-days: ${RESTAURANT_LOG_RETENTION_DAYS:180}
+    print-task-retention-days: ${RESTAURANT_PRINT_TASK_RETENTION_DAYS:90}
+    batch-size: ${RESTAURANT_ARCHIVE_BATCH_SIZE:500}
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: true
+  mapper-locations: classpath:/mapper/**/*.xml

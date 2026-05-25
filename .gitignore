@@ -1,0 +1,28 @@
+.DS_Store
+.idea/
+.vscode/
+*.log
+logs/
+
+# Node / Vite
+**/node_modules/
+**/dist/
+**/dist-ssr/
+*.local
+
+# Java / Spring Boot
+restaurant-order-system/target/
+restaurant-order-system/uploads/
+
+# Flutter / native builds
+restaurant_waiter_app/.dart_tool/
+restaurant_waiter_app/.flutter-plugins-dependencies
+restaurant_waiter_app/build/
+restaurant_waiter_app/android/.gradle/
+restaurant_waiter_app/android/.kotlin/
+**/local.properties
+
+# OS / editor local metadata
+*.iml
+*.ipr
+*.iws

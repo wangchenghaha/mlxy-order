@@ -1,0 +1,236 @@
+马来西亚多商户代客点餐系统-前后端技术栈+项目目录结构文档（最终修正版）
+马来西亚多商户代客点餐系统-前后端技术栈+项目目录结构文档（最终修正版）
+一、文档说明
+本文档基于系统业务需求，定制企业级、可落地、长期维护的技术方案，适配马来西亚海外网络、硬件、支付生态、多语言、多商户、WiFi打印、本地支付等场景，前端采用Flutter开发服务员APP，后端采用Java+SpringBoot微服务单体架构（兼顾开发效率与后期扩展），兼顾稳定性、开发成本与海外适配性。
+核心修正说明：服务员APP仅负责点餐业务交互，不承载任何打印功能、不直连硬件打印机，所有打印任务由后端统一调度、下发指令执行，彻底移除APP端打印相关配置与代码。
+二、整体技术选型原则
+	•	适配马来西亚本地网络、硬件、支付生态，无国内生态强依赖
+	•	多商户数据隔离、业务流程严谨、财务数据精准
+	•	硬件对接（WiFi打印机、POS机）统一由后端调度，前端无硬件直连
+	•	支持离线缓存、异步打印、异常重试
+	•	开发效率高、后期易扩展、维护成本低
+	•	多语言（中/英/马来）国际化无缝适配，三端文案统一无差异
+三、前端技术栈方案
+3.1 服务员移动端APP（核心）
+	•	核心框架：Flutter 3.22+ （启用Impeller引擎，保证安卓/iOS双端流畅）
+	•	开发语言：Dart 3.4+
+	•	状态管理：GetX （轻量、路由+状态+依赖注入一体化，适配点餐高频操作）
+	•	网络请求：Dio （支持重试、缓存、海外网络适配、接口加密）
+	•	本地存储：Hive （轻量本地缓存，用于离线订单、桌台状态、登录信息、多语言文案缓存）
+	•	国际化：后端统一拉取多语言配置+本地缓存，不独立维护语言包
+	•	权限处理：permission_handler （网络、存储、设备基础权限申请）
+	•	UI组件：Flutter官方Material组件+自定义餐饮业务组件
+	•	打包构建：Android Studio/Xcode，生成安卓APK/iOS IPA（适配马来西亚主流手机）
+	•	核心职责：仅负责开台、点餐、加菜、退菜、转台、订单查看、语言切换等点餐业务，不涉及任何打印、硬件对接操作
+3.2 前台收银PC端
+	•	核心框架：Vue3 + Vite
+	•	UI组件库：Element Plus
+	•	网络请求：Axios
+	•	状态管理：Pinia
+	•	国际化：vue-i18n+后端统一语言接口，不独立维护语言包
+	•	硬件联动：支持对接前台本地打印机，完成结账小票补打、测试打印
+	•	构建部署：桌面端可打包为Electron应用，适配Windows收银电脑
+3.3 后台管理端（平台+商户后台）
+	•	核心框架：Vue3 + Vite
+	•	UI组件库：Element Plus
+	•	网络请求：Axios
+	•	权限控制：动态路由+按钮级权限
+	•	国际化：vue-i18n+后端统一语言接口，不独立维护语言包
+	•	数据导出：xlsx （经营报表、订单数据导出）
+	•	硬件配置：支持商户打印机信息录入、参数配置
+四、后端技术栈方案
+4.1 核心技术体系
+	•	开发语言：Java 17 （LTS版本，稳定、性能优）
+	•	核心框架：Spring Boot 3.2.x
+	•	安全权限：Spring Security + JWT （多角色、多商户数据权限拦截）
+	•	ORM框架：MyBatis-Plus （高效开发，多商户数据隔离快速实现）
+	•	数据库：MySQL 8.0 （支持事务、财务数据精准，适配多商户分表）
+	•	缓存中间件：Redis 7.0 （桌台状态、登录会话、打印任务缓存、限流、语言文案缓存）
+	•	异步任务：Spring Async （异步处理打印任务，避免下单阻塞）
+	•	定时任务：Spring Task （日结统计、日志清理、订单超时处理、打印失败重试）
+	•	全局处理：全局异常处理、统一返回结果、参数校验、全局国际化配置
+	•	硬件对接：统一封装WiFi打印机对接服务，下发打印指令、管理打印任务
+	•	工具类：Lombok、Hutool、Guava
+4.2 第三方对接
+	•	支付对接：马来西亚DuitNow QR、Touch ‘n Go、支付宝跨境支付SDK
+	•	打印对接：ESC/POS打印协议，内网IP指令下发，统一调度后厨/前台打印机
+	•	多语言：后端统一管理全局国际化文案，提供三端共用接口
+4.3 部署环境
+	•	服务器：阿里云海外服务器/马来西亚本地服务器
+	•	部署方式：Docker容器化部署，方便迁移维护
+	•	数据库备份：定时自动备份，保障财务数据安全
+五、后端SpringBoot项目目录结构
+
+restaurant-order-system/
+├── src/
+│   ├── main/
+│   │   ├── java/com/malaysia/restaurant/
+│   │   │   ├── config/                # 全局配置类
+│   │   │   │   ├── SecurityConfig.java      # SpringSecurity权限配置
+│   │   │   │   ├── RedisConfig.java          # Redis缓存配置
+│   │   │   │   ├── AsyncConfig.java          # 异步打印任务配置
+│   │   │   │   ├── I18nConfig.java           # 多语言国际化配置
+│   │   │   │   └── PrinterConfig.java        # 打印机硬件参数配置
+│   │   │   ├── controller/            # 接口控制层
+│   │   │   │   ├── admin/             # 平台管理员接口
+│   │   │   │   ├── merchant/          # 商户后台接口
+│   │   │   │   ├── cashier/           # 前台收银接口
+│   │   │   │   ├── waiter/            # 服务员APP接口
+│   │   │   │   └── common/            # 公共接口（登录、上传、国际化）
+│   │   │   ├── entity/                # 数据库实体类
+│   │   │   │   ├── User.java               # 用户（员工/老板/管理员）
+│   │   │   │   ├── Merchant.java           # 商户信息
+│   │   │   │   ├── Table.java              # 桌台信息
+│   │   │   │   ├── Dish.java               # 菜品信息
+│   │   │   │   ├── Order.java              # 订单主表
+│   │   │   │   ├── OrderItem.java          # 订单菜品明细
+│   │   │   │   ├── Printer.java            # 打印机配置
+│   │   │   │   ├── SysI18n.java            # 全局国际化实体
+│   │   │   │   └── Log.java                # 操作日志
+│   │   │   ├── mapper/                # MyBatis数据访问层
+│   │   │   ├── service/               # 业务逻辑层
+│   │   │   │   ├── impl/              # 业务实现类
+│   │   │   │   ├── MerchantService.java
+│   │   │   │   ├── OrderService.java
+│   │   │   │   ├── PrinterService.java     # 打印统一调度服务
+│   │   │   │   ├── SysI18nService.java
+│   │   │   │   └── UserService.java
+│   │   │   ├── dto/                   # 数据传输对象
+│   │   │   │   ├── request/           # 接口请求参数
+│   │   │   │   └── response/          # 接口返回数据
+│   │   │   ├── vo/                    # 视图展示对象
+│   │   │   ├── common/                # 公共工具包
+│   │   │   │   ├── exception/         # 自定义异常
+│   │   │   │   ├── result/            # 统一返回结果
+│   │   │   │   ├── enums/             # 业务枚举（订单状态、支付方式等）
+│   │   │   │   ├── util/              # 工具类（加密、文件、多语言、打印指令）
+│   │   │   │   └── constant/          # 系统常量
+│   │   │   ├── aspect/                # 切面（日志、权限校验）
+│   │   │   └── RestaurantApplication.java  # 项目启动类
+│   │   └── resources/
+│   │       ├── application.yml        # 主配置文件
+│   │       ├── application-dev.yml    # 开发环境配置
+│   │       ├── application-prod.yml  # 生产环境配置
+│   │       ├── mapper/                # MyBatis XML文件
+│   │       ├── i18n/                  # 本地备用语言配置
+│   │       └── static/                # 静态资源
+│   └── test/                          # 单元测试
+├── pom.xml                            # Maven依赖管理
+└── Dockerfile                         # Docker部署文件
+六、前端Flutter服务员APP项目目录结构
+
+restaurant_waiter_app/
+├── lib/
+│   ├── main.dart                      # 项目入口文件
+│   ├── config/                        # 全局配置
+│   │   ├── api_config.dart            # 接口地址配置
+│   │   └── locale_config.dart         # 多语言配置
+│   ├── pages/                         # 业务页面
+│   │   ├── login/                     # 登录页面
+│   │   ├── home/                      # 桌台列表首页
+│   │   ├── order/                     # 点餐/订单/加菜/退菜页面
+│   │   ├── transfer_table/            # 转台页面
+│   │   └── mine/                      # 个人中心（语言切换）
+│   ├── api/                           # 网络请求接口
+│   │   ├── api_service.dart           # 统一网络请求
+│   │   ├── order_api.dart             # 订单相关接口
+│   │   ├── table_api.dart             # 桌台相关接口
+│   │   └── i18n_api.dart              # 多语言接口
+│   ├── models/                        # 数据模型
+│   │   ├── table_model.dart
+│   │   ├── order_model.dart
+│   │   ├── dish_model.dart
+│   │   └── i18n_model.dart
+│   ├── utils/                         # 工具类
+│   │   ├── hive_utils.dart            # 本地缓存工具
+│   │   └── locale_utils.dart          # 多语言工具（拉取+缓存+取值）
+│   ├── widgets/                       # 自定义组件
+│   │   ├── table_item.dart            # 桌台列表组件
+│   │   ├── dish_item.dart             # 菜品选择组件
+│   │   └── common_button.dart         # 公共按钮
+│   ├── routes/                        # 路由管理
+├── pubspec.yaml                       # 依赖管理
+└── assets/                            # 静态资源（图片、字体）
+七、Vue PC端（收银+管理）公共目录说明
+	•	新增lang/index.js：负责调用后端国际化接口，将文案注入vue-i18n实例
+	•	新增utils/locale.js：多语言切换、缓存、取值工具类
+	•	无本地独立语言包，所有国际化文案统一从后端拉取
+	•	收银PC端新增打印工具类，支持前台小票补打、测试打印
+	•	页面沿用$t('key')语法，无需修改原有开发习惯
+八、全局国际化落地方案（三端统一）
+8.1 方案核心原则
+后端统一维护一套全局国际化文案，Flutter APP、收银PC端、管理PC端三端共用，不各自维护独立语言包，实现一处修改、全端同步，保证文案一致性、降低维护成本。
+8.2 数据库表设计（sys_i18n）
+
+CREATE TABLE `sys_i18n` (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键',
+  `i18n_key` varchar(100) NOT NULL COMMENT '国际化唯一key（驼峰命名）',
+  `zh_cn` varchar(500) DEFAULT NULL COMMENT '简体中文',
+  `en_us` varchar(500) DEFAULT NULL COMMENT '英文',
+  `ms_my` varchar(500) DEFAULT NULL COMMENT '马来语',
+  `remark` varchar(255) DEFAULT NULL COMMENT '文案说明',
+  `create_time` datetime DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `update_time` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_i18n_key` (`i18n_key`) COMMENT 'key唯一'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='全局国际化配置表';
+8.3 后端核心实现
+	•	提供公共国际化接口：/api/common/i18n/list，接收语言类型参数（zh_cn/en_us/ms_my）
+	•	接口返回对应语言全量key-value键值对，支持Redis缓存，提升响应速度
+	•	后台管理端新增国际化文案编辑页面，支持可视化增删改查
+	•	全局拦截语言类型，默认返回马来语，适配马来西亚本地使用场景
+	•	业务数据（菜品名称、商户名称）不纳入全局国际化，单独存储多语言字段
+8.4 三端适配逻辑
+8.4.1 Flutter服务员APP
+	•	APP启动/用户切换语言时，调用后端接口拉取对应语言文案
+	•	将文案缓存至本地Hive，离线状态下可正常使用
+	•	封装统一工具类，页面通过LocaleUtil.get('key')获取文案
+	•	语言切换后实时刷新页面，无需重启APP
+8.4.2 Vue收银PC端
+	•	页面初始化/登录成功后，请求后端国际化接口
+	•	将返回文案动态注入vue-i18n实例，替代本地语言包
+	•	缓存语言配置，页面刷新无需重复拉取
+	•	沿用$t('i18nKey')语法，无开发适配成本
+8.4.3 Vue管理PC端
+	•	同收银PC端逻辑，共用同一套国际化key与文案
+	•	支持在管理端直接修改文案，实时同步至另外两端
+	•	权限控制：仅平台管理员可修改国际化文案
+8.5 文案命名规范
+全局统一key命名，三端完全共用，禁止自定义key
+	•	模块_功能_名称：login_title、table_status_empty、order_submit
+	•	公共文案：common_confirm、common_cancel、common_success、common_fail
+8.6 方案优势
+	•	统一维护：仅后端一份数据源，无多端文案不一致问题
+	•	维护便捷：修改/新增文案只需操作后端，无需三端分别修改、打包发布
+	•	适配灵活：新增语言只需在数据库加字段、后端扩展接口，无需改动前端
+	•	离线兼容：前端缓存文案，无网络情况下仍可正常展示
+	•	权限可控：可管控文案修改权限，避免随意改动
+九、打印业务逻辑规范（核心修正）
+	•	服务员APP：提交订单/加菜请求至后端，仅接收接口返回结果，不参与任何打印流程
+	•	后端核心职责：接收订单请求→生成打印数据→异步下发指令至对应商户后厨/前台打印机→监控打印状态→失败自动重试
+	•	收银PC端：仅负责结账小票补打、测试打印，不主动触发后厨打印
+	•	硬件管理：所有打印机参数、IP配置统一在后台管理端录入，后端统一调度，杜绝跨商户串打
+十、前后端交互规范
+	•	接口协议：RESTful API，统一JSON格式返回
+	•	请求方式：GET/POST/PUT/DELETE 规范使用
+	•	权限校验：请求头携带JWT Token，接口层做角色+商户权限校验
+	•	多语言：请求头携带lang参数，后端返回对应语言文案
+	•	异常处理：前端统一捕获后端异常，友好提示用户
+	•	打印任务：后端异步处理，前端不感知、不参与，仅展示业务结果
+	•	国际化：语言标识全局透传，所有接口、提示文案统一适配
+十一、部署与运维建议
+	•	后端采用Docker部署，MySQL、Redis数据持久化
+	•	服务员APP安卓端直接分发APK安装，适配马来西亚本地手机
+	•	收银PC端采用Electron打包，直接安装在Windows收银机
+	•	定期备份数据库，保障订单、财务、商户、国际化配置数据安全
+	•	支持局域网离线运行，网络恢复后自动同步订单数据
+	•	国际化文案修改后实时生效，无需重启服务、更新前端
+	•	打印机统一配置固定内网IP，后端定时校验打印连通性
+十二、技术优势总结
+	•	Flutter+SpringBoot组合完美适配海外无微信生态场景
+	•	多商户数据隔离、权限控制严谨，符合业务需求
+	•	打印架构清晰，后端统一调度硬件，前端职责单一，系统更稳定
+	•	国际化方案完善，三端文案统一、易维护、适配中/英/马来语
+	•	架构易扩展，后期可新增会员、外卖、连锁管理等功能
+	•	技术生态成熟，开发、维护、二次开发成本低
+(豆包AI生成)
